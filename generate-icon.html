@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!-- Run this file once in a browser to generate icon PNGs.
+     Open DevTools > Console and run: generateIcons()
+     Two PNG files will be downloaded: icon-192.png and icon-512.png
+     Place them in the same folder as index.html -->
+<html>
+<body>
+<canvas id="c"></canvas>
+<script>
+function generateIcon(size) {
+  const c = document.getElementById('c');
+  c.width = c.height = size;
+  const ctx = c.getContext('2d');
+
+  // Background
+  const bg = ctx.createLinearGradient(0, 0, size, size);
+  bg.addColorStop(0, '#1a1a2e');
+  bg.addColorStop(1, '#16213e');
+  ctx.fillStyle = bg;
+  ctx.roundRect(0, 0, size, size, size * 0.22);
+  ctx.fill();
+
+  // Accent circle
+  const grd = ctx.createRadialGradient(size*0.5, size*0.5, 0, size*0.5, size*0.5, size*0.4);
+  grd.addColorStop(0, '#e94560');
+  grd.addColorStop(1, '#0f3460');
+  ctx.fillStyle = grd;
+  ctx.beginPath();
+  ctx.arc(size*0.5, size*0.5, size*0.32, 0, Math.PI*2);
+  ctx.fill();
+
+  // Play triangle
+  ctx.fillStyle = '#ffffff';
+  ctx.beginPath();
+  const cx = size * 0.5, cy = size * 0.5, r = size * 0.18;
+  ctx.moveTo(cx + r, cy);
+  ctx.lineTo(cx - r*0.6, cy - r*0.9);
+  ctx.lineTo(cx - r*0.6, cy + r*0.9);
+  ctx.closePath();
+  ctx.fill();
+
+  return c.toDataURL('image/png');
+}
+
+function download(dataUrl, filename) {
+  const a = document.createElement('a');
+  a.href = dataUrl;
+  a.download = filename;
+  a.click();
+}
+
+function generateIcons() {
+  download(generateIcon(192), 'icon-192.png');
+  setTimeout(() => download(generateIcon(512), 'icon-512.png'), 500);
+  console.log('Icons generated and downloaded!');
+}
+
+// Auto-run
+generateIcons();
+</script>
+</body>
+</html>
