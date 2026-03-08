@@ -789,14 +789,16 @@ async function runScript(id, silent = false) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
 
-    const headers = { 'Content-Type': 'application/json' };
+    const headers = {};
     if (config.token) headers['Authorization'] = 'Bearer ' + config.token;
+    // Use text/plain to avoid CORS preflight (JSON triggers preflight which n8n blocks)
+    if (s.method !== 'GET') headers['Content-Type'] = 'text/plain';
 
     const response = await fetch(s.url, {
       method: s.method || 'POST',
       headers,
       signal: controller.signal,
-      body: s.method !== 'GET' ? JSON.stringify({ source: 'n8n-launcher', script: s.name }) : undefined,
+      body: s.method !== 'GET' ? `n8n-launcher:${s.name}` : undefined,
     });
     clearTimeout(timer);
 
