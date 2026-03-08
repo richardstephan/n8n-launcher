@@ -209,25 +209,6 @@
     }
     .edit-btn:active { background: var(--accent2); color: white; }
 
-    /* Run all button */
-    .run-all-btn {
-      width: 100%;
-      height: 50px;
-      border-radius: var(--radius);
-      border: 2px solid var(--accent);
-      background: transparent;
-      color: var(--accent);
-      font-size: 16px;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center; gap: 8px;
-      margin-bottom: 20px;
-      transition: all 0.2s;
-      letter-spacing: 0.3px;
-    }
-    .run-all-btn:active { background: var(--accent); color: white; }
-    .run-all-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-
     /* Section label */
     .section-label {
       font-size: 11px;
@@ -489,12 +470,6 @@
         <p>Tippe auf <strong>＋</strong> oben rechts,<br>um dein erstes n8n-Skript hinzuzufügen.</p>
       </div>
 
-      <div id="run-all-wrap" style="display:none">
-        <button class="run-all-btn" id="run-all-btn" onclick="runAll()">
-          ▶▶ Alle starten
-        </button>
-      </div>
-
       <div id="scripts-list"></div>
     </div>
   </div>
@@ -716,16 +691,12 @@ function buildEmojiGrid() {
 function renderScripts() {
   const list = document.getElementById('scripts-list');
   const empty = document.getElementById('empty-state');
-  const runAllWrap = document.getElementById('run-all-wrap');
-
   if (scripts.length === 0) {
     empty.style.display = 'block';
     list.innerHTML = '';
-    runAllWrap.style.display = 'none';
     return;
   }
   empty.style.display = 'none';
-  runAllWrap.style.display = scripts.length > 1 ? 'block' : 'none';
 
   list.innerHTML = '';
   scripts.forEach(s => {
@@ -864,18 +835,6 @@ function resetCard(id) {
   btnIcon.textContent = '▶';
   btnLbl.textContent = 'Starten';
   status.className = 'status-bar';
-}
-
-// ─── Run all ──────────────────────────────────────────────────────────────────
-async function runAll() {
-  const btn = document.getElementById('run-all-btn');
-  btn.disabled = true;
-  btn.textContent = '⏳ Alle laufen…';
-  for (const s of scripts) {
-    await runScript(s.id);
-  }
-  btn.disabled = false;
-  btn.textContent = '▶▶ Alle starten';
 }
 
 // ─── Logs ─────────────────────────────────────────────────────────────────────
