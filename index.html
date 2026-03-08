@@ -789,32 +789,42 @@ async function runScript(id, silent = false) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeout);
 
+    const hasToken = !!config.token;
     const headers = {};
-    if (config.token) headers['Authorization'] = 'Bearer ' + config.token;
-    // Use text/plain to avoid CORS preflight (JSON triggers preflight which n8n blocks)
-    if (s.method !== 'GET') headers['Content-Type'] = 'text/plain';
+    if (hasToken) headers['Authorization'] = 'Bearer ' + config.token;
+
+    // Use no-cors when no auth token — avoids CORS preflight + response-read block.
+    // The request still reaches n8n and the workflow runs.
+    const fetchMode = hasToken ? 'cors' : 'no-cors';
+    if (s.method !== 'GET' && hasToken) headers['Content-Type'] = 'text/plain';
 
     const response = await fetch(s.url, {
       method: s.method || 'POST',
       headers,
       signal: controller.signal,
+      mode: fetchMode,
       body: s.method !== 'GET' ? `n8n-launcher:${s.name}` : undefined,
     });
     clearTimeout(timer);
 
-    let resultText = '';
-    try {
-      const json = await response.json();
-      resultText = JSON.stringify(json);
-    } catch {
-      resultText = await response.text().catch(() => '');
-    }
-
-    if (response.ok) {
-      setCardSuccess(id, btn, btnIcon, btnLbl, status, resultText);
-      updateLog(logEntry.id, 'success', '✅ Fertig' + (resultText ? ': ' + resultText.slice(0, 120) : ''));
+    // no-cors gives an opaque response (type='opaque', status=0) — request was sent fine
+    if (response.type === 'opaque') {
+      setCardSuccess(id, btn, btnIcon, btnLbl, status, 'Workflow gestartet ✓');
+      updateLog(logEntry.id, 'success', '✅ Workflow gestartet');
     } else {
-      throw new Error('HTTP ' + response.status + ' – ' + resultText.slice(0, 120));
+      let resultText = '';
+      try {
+        const json = await response.json();
+        resultText = JSON.stringify(json);
+      } catch {
+        resultText = await response.text().catch(() => '');
+      }
+      if (response.ok) {
+        setCardSuccess(id, btn, btnIcon, btnLbl, status, resultText);
+        updateLog(logEntry.id, 'success', '✅ Fertig' + (resultText ? ': ' + resultText.slice(0, 120) : ''));
+      } else {
+        throw new Error('HTTP ' + response.status + ' – ' + resultText.slice(0, 120));
+      }
     }
   } catch (err) {
     const msg = err.name === 'AbortError' ? 'Timeout nach ' + (config.timeout || 30) + 's' : err.message;
